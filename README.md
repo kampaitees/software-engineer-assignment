@@ -52,13 +52,16 @@ The model does not decide coverage or scheduling. Coverage is a set comparison o
 
 | Layer | Technology |
 | --- | --- |
-| Frontend | Next.js, React, Tailwind CSS |
-| Backend | Node.js, Express, TypeScript |
-| Persistence | MongoDB, Mongoose |
+| Frontend | Next.js 16, React 19, Tailwind CSS 4 |
+| Backend | Node.js 22 runtime, Express 5, TypeScript 5 |
+| Persistence | MongoDB Atlas, Mongoose 9 |
 | Research | Cheerio, DuckDuckGo HTML search |
 | Generation | Google Gemini API with deterministic local fallback |
-| Testing | Vitest |
-| Deployment | Docker-compatible services, Vercel/Render/Railway/Fly.io, MongoDB Atlas |
+| Authentication | bcryptjs password hashing, JWT, HTTP-only cookies |
+| Testing | Vitest 3 |
+| Deployment | Vercel frontend, Render backend, MongoDB Atlas |
+
+The project uses modern ESM TypeScript on the backend and the Next.js App Router on the frontend. The backend is compiled with TypeScript into `backend/dist/src/`; its production entrypoint is `node dist/src/server.js`.
 
 ## Project Structure
 
@@ -126,6 +129,8 @@ The root `.env.example` contains backend settings. Frontend builds read `NEXT_PU
 
 Never commit `.env`, `.env.local`, API keys, or database credentials.
 
+For production, `FRONTEND_URL` must be the exact HTTPS Vercel origin. The backend automatically uses `SameSite=None; Secure` session cookies when this value starts with `https://`, allowing authentication requests between the Vercel frontend and Render backend. Local HTTP development keeps `SameSite=Lax`.
+
 ## Mandatory Evaluator
 
 The evaluator uses the same `runPipeline` as the web application. It accepts an array of cases, continues after individual failures, and writes the required `version`, `generated_at`, and `kits` structure.
@@ -184,16 +189,22 @@ Questions edited in the interface receive `state: "edited"`. Regenerating a cate
 
 ## Deployment
 
+Current deployment:
+
+- Frontend: [ai-interview-prep-frontend-pied.vercel.app](https://ai-interview-prep-frontend-pied.vercel.app)
+- Backend health check: [software-engineer-backend-gq0l.onrender.com/health](https://software-engineer-backend-gq0l.onrender.com/health)
+- Database: MongoDB Atlas Free cluster
+
 Recommended free-tier layout:
 
 1. Deploy `frontend/` to Vercel or another Next.js host.
-2. Deploy `backend/` to Render, Railway, Fly.io, or another Node/Docker host.
+2. Deploy `backend/` to Render or another Node/Docker host.
 3. Use MongoDB Atlas for the database.
 4. Set `NEXT_PUBLIC_API_URL` on the frontend to the public backend URL.
 5. Set `FRONTEND_URL`, `MONGODB_URI`, `JWT_SECRET`, and `GEMINI_API_KEY` on the backend.
 6. Verify `GET /health`, registration, login, and create-kit flow after deployment.
 
-For Render, use the included `render.yaml` blueprint. It deploys the backend from `backend/`, exposes `/health` as the health check, and marks secrets for manual configuration. For Vercel, import this repository and set the project root to `frontend/`; configure `NEXT_PUBLIC_API_URL` with the public Render backend URL.
+For Render, use the included `render.yaml` blueprint or create a free Web Service manually with `backend/` as the root directory. The build command is `npm install && npm run build`, the start command is `npm start`, and the health check is `/health`. For Vercel, import this repository, set the project root to `frontend/`, and configure `NEXT_PUBLIC_API_URL` with the public Render backend URL.
 
 The Dockerfiles in `frontend/` and `backend/` are included for container-based deployment. Secrets must be configured through the hosting provider's environment settings.
 
@@ -206,7 +217,13 @@ The Dockerfiles in `frontend/` and `backend/` are included for container-based d
 
 ## Assessment Status
 
-The repository includes the complete source, Docker configuration, tests, sample cases, and mandatory evaluator. Local verification completed successfully with passing tests, a successful production build, and successful sample-case evaluation.
+The repository includes the complete source, Docker configuration, tests, sample cases, mandatory evaluator, deployment blueprint, and walkthrough guide. Recent production fixes include:
+
+- Corrected the compiled backend entrypoint from `dist/server.js` to `dist/src/server.js`.
+- Added cross-site production session cookies for Vercel-to-Render authentication.
+- Added debounced inline persistence for question and company-brief edits.
+- Added a dedicated Vercel frontend project and Render backend deployment configuration.
+- Verified backend tests, production build, sample-case evaluator, frontend health, and backend `/health`.
 
 ## Walkthrough Guide
 
