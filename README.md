@@ -193,6 +193,8 @@ Recommended free-tier layout:
 5. Set `FRONTEND_URL`, `MONGODB_URI`, `JWT_SECRET`, and `GEMINI_API_KEY` on the backend.
 6. Verify `GET /health`, registration, login, and create-kit flow after deployment.
 
+For Render, use the included `render.yaml` blueprint. It deploys the backend from `backend/`, exposes `/health` as the health check, and marks secrets for manual configuration. For Vercel, import this repository and set the project root to `frontend/`; configure `NEXT_PUBLIC_API_URL` with the public Render backend URL.
+
 The Dockerfiles in `frontend/` and `backend/` are included for container-based deployment. Secrets must be configured through the hosting provider's environment settings.
 
 ## Trade-offs
