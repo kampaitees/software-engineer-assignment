@@ -1,119 +1,207 @@
 # AI Interview Prep Kit
 
-A full-stack assessment implementation that converts a pasted job description plus company URL into a structured interview preparation kit. The pipeline deliberately separates extraction, retrieval, research, targeted question generation, deterministic coverage checking, deterministic schedule allocation, validation and persistence.
+> Turn a job description and company URL into a focused, editable interview preparation workspace.
 
-## Stack
-- Next.js + Tailwind CSS frontend
-- Node.js + Express backend
-- MongoDB + Mongoose
-- TypeScript
-- Cheerio for HTML parsing
-- Gemini API (default: `gemini-3-flash-preview`)
-- Vitest for deterministic pipeline tests
+This is a full-stack engineering assessment implementation. It extracts role requirements, researches the company, generates targeted interview material, checks requirement coverage deterministically, creates a day-by-day schedule, and persists the result for continued practice.
 
-The assessment's preferred stack is Next.js, Tailwind, Node/Express, MongoDB and JavaScript/TypeScript; this project follows that choice.
+## What It Does
+
+- Extracts technical, behavioural, and domain requirements from a job description.
+- Crawls the supplied company site and ranks useful pages such as hiring, about, and engineering pages.
+- Searches public interview discussion and labels the result as reported public information.
+- Generates a company brief, category-specific questions, and flashcards.
+- Runs a deterministic coverage check and a targeted second-generation pass for missing must-have requirements.
+- Allocates questions across exactly the requested number of study days.
+- Lets users edit, reorder, add, delete, regenerate, and practise from a saved kit.
+- Orders future flashcard practice by the user's lowest recorded confidence.
 
 ## Architecture
 
-`frontend -> Express API -> services -> MongoDB`
+```text
+Next.js frontend
+			 |
+			 v
+Express API -> MongoDB
+			 |
+			 +-> extraction
+			 +-> company crawler and public research
+			 +-> LLM generation
+			 +-> deterministic coverage and scheduling
+			 +-> validation and persistence
+```
 
-Pipeline:
+Generation flow:
 
-`JD -> requirement extraction -> company crawl/link ranking -> public interview discussion search -> company brief -> category-specific questions -> coverage check -> missing-question second pass (max 3 total) -> flashcards -> deterministic schedule -> structure validation -> persistence`
+```text
+JD
+ -> requirement extraction
+ -> company crawl and interview research
+ -> company brief
+ -> category-specific questions
+ -> coverage check
+ -> missing-question pass (maximum 3 total passes)
+ -> flashcards
+ -> deterministic schedule
+ -> structure validation
+ -> persistence
+```
 
-The model never decides the schedule or coverage status. The schedule is arithmetic/code. Coverage is a set comparison over stable requirement IDs and question `requirement_ids`.
+The model does not decide coverage or scheduling. Coverage is a set comparison over stable requirement IDs, and scheduling is arithmetic performed by application code.
 
-## Generated / edited state
+## Technology
 
-Hand-edited questions are marked with `state: "edited"`. Regeneration replaces generated material while preserving edited questions from the same category. This prevents a section regeneration from clobbering deliberate user edits elsewhere.
+| Layer | Technology |
+| --- | --- |
+| Frontend | Next.js, React, Tailwind CSS |
+| Backend | Node.js, Express, TypeScript |
+| Persistence | MongoDB, Mongoose |
+| Research | Cheerio, DuckDuckGo HTML search |
+| Generation | Google Gemini API with deterministic local fallback |
+| Testing | Vitest |
+| Deployment | Docker-compatible services, Vercel/Render/Railway/Fly.io, MongoDB Atlas |
 
-## Retrieval
+## Project Structure
 
-The crawler starts at the supplied homepage, collects same-host links, ranks links using hiring/about/engineering/interview-related URL and anchor keywords, and fetches the highest-ranked candidates. It follows relative links, uses timeouts, enforces a response-size limit, retries transient failures, and records skipped sources. Public interview discussion is searched through DuckDuckGo HTML; absence of results is represented honestly.
+```text
+backend/
+	evaluate/                 Mandatory batch evaluator
+	src/routes/               Auth and kit API routes
+	src/services/             Pipeline, crawler, research, generation, validation
+	tests/                    Deterministic behavior tests
+frontend/
+	src/app/                  Next.js pages and kit workflow
+	src/components/           Shared navigation and auth components
+cases/                      Sample evaluator input
+docker-compose.yml          Local MongoDB service
+```
 
-The crawler validates HTTP(S) URLs and blocks private/loopback resolution in normal production mode. The mandatory evaluator supports local test hosts by setting `EVALUATE_MODE=1` inside the CLI process.
+## Quick Start
 
-## LLM calls
+### Prerequisites
 
-Generation is intentionally split into multiple responsibilities. Requirements, company brief, each question category, and flashcards are different model calls. Invalid JSON is retried. HTTP 429s use exponential backoff. When `GEMINI_API_KEY` is missing, a deterministic fallback generator allows local UI/demo work without credentials; a real evaluation run should configure the provider key.
+- Node.js 20 or newer
+- Docker Desktop for local MongoDB
+- A Gemini API key for live generation; local fallback generation works without one
 
-Google's Gemini Developer API currently documents a free tier for selected models; check current model/rate-limit availability before evaluation. See the official Gemini docs for current limits and model availability.
+### Install
 
-## Setup
+From the repository root:
 
-### 1. Prerequisites
-- Node.js 20+
-- Docker (recommended for MongoDB)
-
-### 2. Install
-
-```bash
+```powershell
 npm install
 Copy-Item .env.example .env
 Copy-Item frontend/.env.example frontend/.env.local
 ```
 
-### 3. MongoDB
+Start MongoDB:
 
-```bash
+```powershell
 docker compose up -d mongo
 ```
 
-### 4. Environment
+Set `GEMINI_API_KEY` and a strong random `JWT_SECRET` in `.env`, then start both services:
 
-Fill in `GEMINI_API_KEY` and set a long random `JWT_SECRET` in `.env`.
-
-### 5. Run
-
-```bash
+```powershell
 npm run dev
 ```
 
-Frontend: http://localhost:3000
-Backend: http://localhost:4000/health
+Open the frontend at [http://localhost:3000](http://localhost:3000). The backend health endpoint is [http://localhost:4000/health](http://localhost:4000/health).
 
-## Mandatory batch command
+## Environment Variables
 
-The required command is implemented exactly as requested:
+The root `.env.example` contains backend settings. Frontend builds read `NEXT_PUBLIC_API_URL` from `frontend/.env.local`.
+
+| Variable | Purpose | Local default |
+| --- | --- | --- |
+| `PORT` | Backend listening port | `4000` |
+| `FRONTEND_URL` | Allowed frontend origin for CORS | `http://localhost:3000` |
+| `MONGODB_URI` | MongoDB connection string | Local MongoDB database |
+| `JWT_SECRET` | Session signing secret | Replace before deployment |
+| `GEMINI_API_KEY` | Gemini generation credentials | Empty enables fallback mode |
+| `GEMINI_MODEL` | Gemini model name | `gemini-3-flash-preview` |
+| `NEXT_PUBLIC_API_URL` | Frontend API base URL | `http://localhost:4000` |
+| `ALLOW_PRIVATE_FETCH` | Allow private URLs during controlled evaluation | `false` |
+| `MAX_FETCH_BYTES` | Maximum fetched page size | `2000000` |
+| `FETCH_TIMEOUT_MS` | External fetch timeout | `12000` |
+
+Never commit `.env`, `.env.local`, API keys, or database credentials.
+
+## Mandatory Evaluator
+
+The evaluator uses the same `runPipeline` as the web application. It accepts an array of cases, continues after individual failures, and writes the required `version`, `generated_at`, and `kits` structure.
 
 ```bash
-npm run evaluate -- --input <cases.json> --output <kits.json>
+npm run evaluate -- --input cases/sample-cases.json --output kits.json
 ```
 
-Example:
+Each input case contains:
 
-```bash
-npm run evaluate -- --input cases/sample-cases.json --output /tmp/kits.json
+```json
+{
+	"id": "case-01",
+	"jd": "Job description text",
+	"company_url": "https://example.com",
+	"days": 5
+}
 ```
 
-The evaluator runs the same `runPipeline` used by the application, continues after per-case failures, and writes Appendix B's `version/generated_at/kits` shape.
+The evaluator also supports local test hosts and resolves relative input/output paths from the repository root when run through the workspace script.
 
-## Tests
+## Verification
+
+Run the automated tests:
 
 ```bash
 npm test
 ```
 
-Tests protect the three highest-risk deterministic behaviours: schedule allocation, coverage checking and structure validation.
+Build both production services:
+
+```bash
+npm run build
+```
+
+The tests cover the highest-risk deterministic behavior:
+
+- Coverage identifies uncovered must-have requirements.
+- Scheduling creates exactly the requested number of days with integer durations.
+- Validation rejects invalid structure and unknown scheduled question IDs.
+
+## Editing and Regeneration Rules
+
+Questions edited in the interface receive `state: "edited"`. Regenerating a category replaces generated questions in that category while preserving edited questions. Regenerating the company brief or schedule only updates that section, so edits elsewhere remain intact. Inline text changes are applied locally immediately and persisted with a short debounce.
+
+## Security and Failure Handling
+
+- External URLs are validated before crawling.
+- Private and loopback addresses are blocked in normal production mode.
+- Fetches have content-size and timeout limits.
+- Transient fetch and LLM failures are retried.
+- Invalid LLM JSON is retried before the pipeline fails.
+- Structured API errors are returned to the frontend.
+- Duplicate job description and company submissions are detected by a normalized hash.
+- Thin job descriptions and empty public research produce honest, limited output instead of invented facts.
 
 ## Deployment
 
-A simple deployment is:
-- frontend on a Next.js-capable host (for example Vercel)
-- backend on a Node-capable host (for example Render/Railway/Fly.io)
-- MongoDB Atlas for persistence
+Recommended free-tier layout:
 
-Set `NEXT_PUBLIC_API_URL` on the frontend and `FRONTEND_URL` on the backend to the public URLs. Never commit secrets.
+1. Deploy `frontend/` to Vercel or another Next.js host.
+2. Deploy `backend/` to Render, Railway, Fly.io, or another Node/Docker host.
+3. Use MongoDB Atlas for the database.
+4. Set `NEXT_PUBLIC_API_URL` on the frontend to the public backend URL.
+5. Set `FRONTEND_URL`, `MONGODB_URI`, `JWT_SECRET`, and `GEMINI_API_KEY` on the backend.
+6. Verify `GET /health`, registration, login, and create-kit flow after deployment.
 
-For Vercel, set `NEXT_PUBLIC_API_URL` to the deployed backend URL before the frontend build. For Render/Railway/Fly.io, set `PORT`, `FRONTEND_URL`, `MONGODB_URI`, `JWT_SECRET`, and `GEMINI_API_KEY` in the service environment. The backend health check is `GET /health`.
+The Dockerfiles in `frontend/` and `backend/` are included for container-based deployment. Secrets must be configured through the hosting provider's environment settings.
 
-## Known limitations / trade-offs
+## Trade-offs
 
-- The public interview search uses a simple public HTML endpoint and may return fewer results than a paid search API.
-- Crawl depth is intentionally limited to keep free-tier latency predictable.
-- Flashcard practice uses confidence-weighted ordering rather than a full spaced-repetition algorithm.
-- The batch evaluator accepts the mandatory JSON shape; the web UI loads the first case from an uploaded JSON file for quick entry.
+- DuckDuckGo HTML search is free and simple, but less reliable than a paid search API.
+- Crawl depth is intentionally limited to keep latency and free-tier usage predictable.
+- Confidence-weighted practice is intentionally explainable instead of implementing a full spaced-repetition algorithm.
+- The batch UI loads the first case from an uploaded JSON file for quick entry.
 
-## Creative feature
+## Assessment Status
 
-The practice workflow itself is the differentiator: confidence is persisted per flashcard, and the next session orders cards by lowest observed confidence first. This is intentionally simple, explainable and reuses practice data already required by the assessment.
+The repository includes the complete source, Docker configuration, tests, sample cases, and mandatory evaluator. Local verification completed successfully with passing tests, a successful production build, and successful sample-case evaluation.
