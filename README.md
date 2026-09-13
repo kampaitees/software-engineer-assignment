@@ -108,7 +108,9 @@ Set `GEMINI_API_KEY` and a strong random `JWT_SECRET` in `.env`, then start both
 npm run dev
 ```
 
-Open the frontend at [http://localhost:3000](http://localhost:3000). The backend health endpoint is [http://localhost:4000/health](http://localhost:4000/health).
+For the deployed application, open the frontend at [ai-interview-prep-frontend-pied.vercel.app](https://ai-interview-prep-frontend-pied.vercel.app) and verify the backend with [software-engineer-backend-gq0l.onrender.com/health](https://software-engineer-backend-gq0l.onrender.com/health).
+
+For local development only, `npm run dev` serves the frontend at `http://localhost:3000` and the backend health endpoint at `http://localhost:4000/health`.
 
 ## Environment Variables
 
