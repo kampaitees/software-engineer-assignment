@@ -1,0 +1,14 @@
+AI Interview Prep Kit — START HERE
+
+1) Open this folder.
+2) Copy .env.example to .env and frontend/.env.example to frontend/.env.local.
+3) Put a Gemini API key into GEMINI_API_KEY for real generation.
+4) Run: docker compose up -d mongo
+5) Run: npm install (Node.js 20+ required)
+6) Run: npm run dev
+7) Open http://localhost:3000 and register.
+
+Mandatory evaluator:
+npm run evaluate -- --input cases/sample-cases.json --output kits.json
+
+Real deployment still requires your hosting account, database, and API credentials. The zip contains the full source, tests, evaluator, Docker config and README.

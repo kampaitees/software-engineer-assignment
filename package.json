@@ -1,0 +1,16 @@
+{
+  "name": "ai-interview-prep-kit",
+  "private": true,
+  "workspaces": ["frontend", "backend"],
+  "scripts": {
+    "install:all": "npm install",
+    "dev": "concurrently -k -n BACKEND,FRONTEND -c blue,green \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "build": "npm run build -w backend && npm run build -w frontend",
+    "test": "npm run test -w backend",
+    "evaluate": "npm run evaluate -w backend --",
+    "format:check": "echo \"Use prettier/eslint locally if desired\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

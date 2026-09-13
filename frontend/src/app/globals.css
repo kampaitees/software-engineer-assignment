@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+
+:root { color-scheme: light; }
+body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, sans-serif; background: #f5f7fb; color: #111827; }
+button, input, textarea, select { font: inherit; }
+.card { background: white; border: 1px solid #e5e7eb; border-radius: 16px; box-shadow: 0 8px 28px rgba(15,23,42,.06); }
+.btn { border-radius: 10px; padding: 10px 14px; font-weight: 700; cursor: pointer; border: 1px solid transparent; }
+.btn-primary { background: #111827; color: white; }
+.btn-secondary { background: white; border-color: #d1d5db; }
+.btn-danger { background: #b91c1c; color: white; }
+.input { width: 100%; border: 1px solid #d1d5db; border-radius: 10px; padding: 10px 12px; background: white; }
+.badge { display:inline-flex; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
