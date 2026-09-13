@@ -217,7 +217,7 @@ The Dockerfiles in `frontend/` and `backend/` are included for container-based d
 
 ## Assessment Status
 
-The repository includes the complete source, Docker configuration, tests, sample cases, mandatory evaluator, deployment blueprint, and walkthrough guide. Recent production fixes include:
+The repository includes the complete source, Docker configuration, tests, sample cases, mandatory evaluator, and deployment blueprint. Recent production fixes include:
 
 - Corrected the compiled backend entrypoint from `dist/server.js` to `dist/src/server.js`.
 - Added cross-site production session cookies for Vercel-to-Render authentication.
@@ -225,6 +225,3 @@ The repository includes the complete source, Docker configuration, tests, sample
 - Added a dedicated Vercel frontend project and Render backend deployment configuration.
 - Verified backend tests, production build, sample-case evaluator, frontend health, and backend `/health`.
 
-## Walkthrough Guide
-
-For the screen recording script, screenshot checklist, live demo order, and file-by-file code explanation, see [WALKTHROUGH.md](WALKTHROUGH.md).
