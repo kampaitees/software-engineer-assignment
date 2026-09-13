@@ -4,11 +4,13 @@ import { z } from 'zod'
 import { UserModel } from '../models/User.js'
 import { signSession } from '../middleware/auth.js'
 import { AppError } from '../utils/errors.js'
+import { env } from '../config/env.js'
 
 export const authRouter = Router()
 const Body = z.object({ email:z.string().email(), password:z.string().min(8).max(128) })
 
-const cookieOpts = { httpOnly:true, sameSite:'lax' as const, secure:process.env.NODE_ENV==='production', maxAge:7*24*60*60*1000 }
+const crossSiteProduction = env.FRONTEND_URL.startsWith('https://')
+const cookieOpts = { httpOnly:true, sameSite:crossSiteProduction ? 'none' as const : 'lax' as const, secure:crossSiteProduction, maxAge:7*24*60*60*1000 }
 
 authRouter.post('/register', async (req,res,next)=>{
   try { const b=Body.parse(req.body); if(await UserModel.exists({email:b.email.toLowerCase()})) throw new AppError(409,'EMAIL_EXISTS','An account with that email already exists.'); const user=await UserModel.create({email:b.email.toLowerCase(),passwordHash:await bcrypt.hash(b.password,12)}); res.cookie('session',signSession(user.id),cookieOpts); res.status(201).json({user:{id:user.id,email:user.email}}) }
