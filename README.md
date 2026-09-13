@@ -207,3 +207,7 @@ The Dockerfiles in `frontend/` and `backend/` are included for container-based d
 ## Assessment Status
 
 The repository includes the complete source, Docker configuration, tests, sample cases, and mandatory evaluator. Local verification completed successfully with passing tests, a successful production build, and successful sample-case evaluation.
+
+## Walkthrough Guide
+
+For the screen recording script, screenshot checklist, live demo order, and file-by-file code explanation, see [WALKTHROUGH.md](WALKTHROUGH.md).
